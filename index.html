@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Insurance Matcher AI — Find the policy that actually fits.</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,600;9..144,700&family=JetBrains+Mono:wght@400;500&family=Inter+Tight:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#f4f1ea;
+    --bg-deep:#ebe6db;
+    --ink:#1a1d1a;
+    --ink-soft:#4a4f4a;
+    --line:#1a1d1a;
+    --accent:#c2410c;        /* burnt orange */
+    --accent-soft:#fef3e7;
+    --green:#3f6634;
+    --green-soft:#e8efd9;
+    --blue:#1e4a6e;
+    --blue-soft:#dbe6ef;
+    --mute:#a8a399;
+    --card:#fbf9f4;
+    --shadow:0 1px 0 var(--ink);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:var(--bg);color:var(--ink);font-family:'Inter Tight',sans-serif;font-size:16px;line-height:1.5;-webkit-font-smoothing:antialiased}
+  body{
+    background-image:
+      radial-gradient(circle at 15% 20%, rgba(194,65,12,.04) 0%, transparent 40%),
+      radial-gradient(circle at 85% 80%, rgba(30,74,110,.04) 0%, transparent 40%);
+    min-height:100vh;
+  }
+
+  /* layout */
+  .shell{max-width:1180px;margin:0 auto;padding:32px 40px 80px}
+  @media(max-width:720px){.shell{padding:24px 20px 60px}}
+
+  /* header */
+  header{
+    display:flex;justify-content:space-between;align-items:center;
+    padding-bottom:24px;border-bottom:1px solid var(--ink);
+    margin-bottom:48px;
+  }
+  .logo{display:flex;align-items:center;gap:10px;font-family:'Fraunces',serif;font-weight:600;font-size:22px;letter-spacing:-.02em}
+  .logo-mark{
+    width:32px;height:32px;border:1.5px solid var(--ink);border-radius:50%;
+    display:grid;place-items:center;background:var(--accent);position:relative;
+  }
+  .logo-mark::after{
+    content:'';width:10px;height:10px;background:var(--bg);border-radius:50%;
+  }
+  .header-meta{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-soft)}
+  .header-meta span{display:inline-block;width:6px;height:6px;background:var(--green);border-radius:50%;margin-right:6px;vertical-align:middle;animation:pulse 2s infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+  /* hero */
+  .hero{margin-bottom:56px}
+  .eyebrow{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:var(--accent);margin-bottom:20px}
+  .hero h1{
+    font-family:'Fraunces',serif;font-weight:400;
+    font-size:clamp(40px,6vw,76px);line-height:1.02;letter-spacing:-.03em;
+    margin-bottom:20px;max-width:900px;
+  }
+  .hero h1 em{font-style:italic;color:var(--accent);font-weight:500}
+  .hero p{font-size:18px;color:var(--ink-soft);max-width:620px;line-height:1.55}
+
+  /* form */
+  .form-wrap{
+    background:var(--card);border:1px solid var(--ink);
+    padding:40px;margin-bottom:32px;position:relative;
+  }
+  .form-wrap::before{
+    content:'01 / INTAKE';position:absolute;top:-1px;left:32px;
+    background:var(--card);padding:4px 12px;
+    font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.1em;
+    transform:translateY(-50%);border:1px solid var(--ink);
+  }
+  .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+  @media(max-width:720px){.form-grid{grid-template-columns:1fr}}
+  .field{display:flex;flex-direction:column;gap:8px}
+  .field.full{grid-column:1/-1}
+  label{
+    font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.08em;
+    text-transform:uppercase;color:var(--ink-soft);
+  }
+  input,select,textarea{
+    font-family:'Inter Tight',sans-serif;font-size:15px;
+    padding:12px 14px;border:1px solid var(--ink);background:var(--bg);
+    color:var(--ink);border-radius:0;transition:background .15s;
+  }
+  input:focus,select:focus,textarea:focus{outline:none;background:#fff;box-shadow:3px 3px 0 var(--ink)}
+  textarea{resize:vertical;min-height:80px;font-family:'Inter Tight',sans-serif}
+  .helper{font-size:12px;color:var(--mute);font-style:italic}
+
+  /* button */
+  .submit-row{display:flex;justify-content:space-between;align-items:center;margin-top:32px;flex-wrap:wrap;gap:16px}
+  .disclaimer{font-size:12px;color:var(--mute);max-width:380px;font-style:italic}
+  button.primary{
+    font-family:'Inter Tight',sans-serif;font-weight:600;font-size:15px;
+    background:var(--ink);color:var(--bg);padding:16px 32px;
+    border:1px solid var(--ink);cursor:pointer;letter-spacing:.01em;
+    transition:transform .1s,box-shadow .1s;display:inline-flex;align-items:center;gap:10px;
+  }
+  button.primary:hover{transform:translate(-2px,-2px);box-shadow:4px 4px 0 var(--accent)}
+  button.primary:active{transform:translate(0,0);box-shadow:none}
+  button.primary:disabled{opacity:.6;cursor:not-allowed;transform:none;box-shadow:none}
+  .arrow{display:inline-block;transition:transform .2s}
+  button.primary:hover .arrow{transform:translateX(4px)}
+
+  /* loading */
+  .loading{display:none;padding:60px 40px;text-align:center;background:var(--card);border:1px solid var(--ink);margin-bottom:32px}
+  .loading.active{display:block}
+  .loading h3{font-family:'Fraunces',serif;font-size:24px;font-weight:500;margin-bottom:24px;letter-spacing:-.01em}
+  .pipeline{display:flex;justify-content:center;gap:0;font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;flex-wrap:wrap}
+  .stage{padding:8px 16px;border:1px solid var(--mute);color:var(--mute);transition:all .3s;margin:-1px 0 0 -1px}
+  .stage.active{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+  .stage.done{background:var(--green-soft);color:var(--green);border-color:var(--green)}
+
+  /* results */
+  .results{display:none}
+  .results.active{display:block;animation:fadeUp .5s ease-out}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+
+  .results-header{margin-bottom:32px;padding-bottom:24px;border-bottom:1px solid var(--ink)}
+  .results-header .eyebrow{margin-bottom:12px}
+  .results-header h2{font-family:'Fraunces',serif;font-size:36px;font-weight:400;letter-spacing:-.02em;margin-bottom:8px}
+  .results-header h2 em{font-style:italic;color:var(--accent)}
+  .results-header p{color:var(--ink-soft);font-size:15px}
+
+  .cards{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-bottom:40px}
+  @media(max-width:900px){.cards{grid-template-columns:1fr}}
+
+  .card{
+    background:var(--card);border:1px solid var(--ink);padding:28px;
+    position:relative;display:flex;flex-direction:column;
+    transition:transform .15s;
+  }
+  .card:hover{transform:translate(-3px,-3px);box-shadow:6px 6px 0 var(--ink)}
+  .card.balanced{background:var(--accent-soft);border-color:var(--accent)}
+  .card.balanced:hover{box-shadow:6px 6px 0 var(--accent)}
+
+  .card-tag{
+    position:absolute;top:-1px;right:24px;
+    font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.12em;
+    text-transform:uppercase;padding:5px 12px;
+    background:var(--ink);color:var(--bg);transform:translateY(-50%);
+  }
+  .card.safe .card-tag{background:var(--blue)}
+  .card.balanced .card-tag{background:var(--accent)}
+  .card.budget .card-tag{background:var(--green)}
+
+  .match-score{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--ink-soft);letter-spacing:.05em;margin-bottom:8px}
+  .match-score b{color:var(--ink);font-weight:500}
+
+  .card h3{font-family:'Fraunces',serif;font-size:24px;font-weight:500;line-height:1.15;letter-spacing:-.01em;margin-bottom:6px}
+  .card .insurer{font-size:13px;color:var(--ink-soft);margin-bottom:24px;font-style:italic}
+
+  .price-block{display:flex;align-items:baseline;gap:6px;margin-bottom:4px}
+  .price{font-family:'Fraunces',serif;font-size:38px;font-weight:500;letter-spacing:-.02em}
+  .price-unit{font-size:13px;color:var(--ink-soft)}
+  .annual-est{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--ink-soft);margin-bottom:24px;padding-bottom:20px;border-bottom:1px dashed var(--mute)}
+  .annual-est b{color:var(--ink);font-weight:500}
+
+  .specs{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px}
+  .spec{display:flex;flex-direction:column;gap:2px}
+  .spec-label{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-soft)}
+  .spec-val{font-size:14px;font-weight:500}
+
+  .highlights{margin-bottom:24px}
+  .highlights-title{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-soft);margin-bottom:10px}
+  .highlights ul{list-style:none;display:flex;flex-direction:column;gap:6px}
+  .highlights li{font-size:13.5px;line-height:1.4;padding-left:18px;position:relative}
+  .highlights li::before{content:'→';position:absolute;left:0;color:var(--accent);font-weight:500}
+
+  .card-cta{
+    margin-top:auto;padding-top:20px;border-top:1px solid var(--ink);
+    display:flex;justify-content:space-between;align-items:center;
+  }
+  .card-cta button{
+    background:transparent;border:none;font-family:'Inter Tight',sans-serif;
+    font-size:13px;font-weight:600;cursor:pointer;color:var(--ink);
+    display:inline-flex;align-items:center;gap:6px;padding:0;
+  }
+  .card-cta button:hover{color:var(--accent)}
+
+  /* reasoning panel */
+  .reasoning{
+    background:var(--card);border:1px solid var(--ink);padding:32px 40px;
+    position:relative;margin-bottom:24px;
+  }
+  .reasoning::before{
+    content:'02 / AI REASONING';position:absolute;top:-1px;left:32px;
+    background:var(--card);padding:4px 12px;
+    font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.1em;
+    transform:translateY(-50%);border:1px solid var(--ink);
+  }
+  .reasoning h4{font-family:'Fraunces',serif;font-size:20px;font-weight:500;margin-bottom:16px;letter-spacing:-.01em}
+  .reasoning-body{font-size:14.5px;line-height:1.6;color:var(--ink-soft)}
+  .reasoning-body strong{color:var(--ink);font-weight:600}
+  .reasoning-body p{margin-bottom:12px}
+  .reasoning-body p:last-child{margin-bottom:0}
+
+  /* reset */
+  .reset-row{text-align:center;margin-top:32px}
+  .reset-btn{background:transparent;border:1px solid var(--ink);padding:10px 24px;font-family:'Inter Tight',sans-serif;font-size:13px;cursor:pointer;letter-spacing:.02em}
+  .reset-btn:hover{background:var(--ink);color:var(--bg)}
+
+  /* footer */
+  footer{margin-top:80px;padding-top:24px;border-top:1px solid var(--ink);font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--ink-soft);letter-spacing:.05em;display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px}
+
+  /* AI factory annotations on cards */
+  .factory-trace{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--mute);letter-spacing:.05em;margin-top:8px}
+</style>
+</head>
+<body>
+
+<div class="shell">
+  <header>
+    <div class="logo">
+      <div class="logo-mark"></div>
+      <span>Insurance Matcher<sup style="font-size:11px;color:var(--accent);margin-left:2px">AI</sup></span>
+    </div>
+    <div class="header-meta"><span></span>PROTOTYPE · v0.3 · DEMO MODE</div>
+  </header>
+
+  <section class="hero">
+    <div class="eyebrow">A demo for BUS 4XX — AI in Business</div>
+    <h1>Health insurance is intentionally confusing. <em>We translate it.</em></h1>
+    <p>Tell us a little about your health, your income, and what you actually use the doctor for. We'll rank every available plan in your state and surface the three that fit you best — one Safe, one Balanced, one Budget.</p>
+  </section>
+
+  <!-- intake form -->
+  <div class="form-wrap" id="formCard">
+    <div class="form-grid">
+      <div class="field">
+        <label for="age">Age</label>
+        <input type="number" id="age" min="18" max="100" value="29">
+      </div>
+      <div class="field">
+        <label for="state">State</label>
+        <select id="state">
+          <option>Washington</option><option>California</option><option>Oregon</option>
+          <option>Texas</option><option>New York</option><option>Florida</option>
+          <option>Illinois</option><option>Colorado</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="income">Annual income (USD)</label>
+        <input type="number" id="income" min="0" value="62000">
+      </div>
+      <div class="field">
+        <label for="employment">Employment</label>
+        <select id="employment">
+          <option>Freelancer / 1099</option>
+          <option>Self-employed</option>
+          <option>Between jobs</option>
+          <option>Part-time, no benefits</option>
+          <option>Gig worker</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="visits">Doctor visits per year (typical)</label>
+        <select id="visits">
+          <option value="low">0–2 (rarely sick)</option>
+          <option value="med" selected>3–6 (a few check-ins)</option>
+          <option value="high">7–12 (chronic management)</option>
+          <option value="vhigh">12+ (ongoing care)</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="meds">Prescription medications</label>
+        <select id="meds">
+          <option value="none">None</option>
+          <option value="generic" selected>1–2 generics</option>
+          <option value="brand">Brand-name / specialty</option>
+          <option value="multi">Multiple chronic</option>
+        </select>
+      </div>
+      <div class="field full">
+        <label for="conditions">Existing conditions or concerns (optional)</label>
+        <textarea id="conditions" placeholder="e.g., asthma, anxiety, family history of heart disease, planning to start a family in 2 years…">mild asthma, occasional therapy visits</textarea>
+        <div class="helper">Used only to weight coverage relevance. In a real product, this would be cross-checked against your medical records (with consent).</div>
+      </div>
+      <div class="field">
+        <label for="priority">Top priority</label>
+        <select id="priority">
+          <option value="cost">Lowest total cost</option>
+          <option value="coverage" selected>Best coverage for my needs</option>
+          <option value="network">Keep my doctors</option>
+          <option value="catastrophic">Catastrophic protection only</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="risk">Risk tolerance</label>
+        <select id="risk">
+          <option value="low">Low — I want a safety net</option>
+          <option value="med" selected>Medium — balance is fine</option>
+          <option value="high">High — I almost never go to the doctor</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="submit-row">
+      <div class="disclaimer">Demo only. No real PHI is collected; results are AI-generated for illustration. In production this flow would be HIPAA-compliant and encrypted end-to-end.</div>
+      <button class="primary" id="goBtn" onclick="runMatch()">Find my matches <span class="arrow">→</span></button>
+    </div>
+  </div>
+
+  <!-- loading state -->
+  <div class="loading" id="loading">
+    <h3>Working through the AI factory…</h3>
+    <div class="pipeline">
+      <div class="stage" id="s1">Data</div>
+      <div class="stage" id="s2">Model</div>
+      <div class="stage" id="s3">Prediction</div>
+      <div class="stage" id="s4">Decision</div>
+      <div class="stage" id="s5">Value</div>
+    </div>
+    <div style="margin-top:24px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--ink-soft);letter-spacing:.05em" id="loadStatus">Parsing intake…</div>
+  </div>
+
+  <!-- results -->
+  <div class="results" id="results">
+    <div class="results-header">
+      <div class="eyebrow">Match Results — <span id="resultStamp"></span></div>
+      <h2>Three policies that fit you, <em>ranked</em>.</h2>
+      <p>You stay in control. The AI ranks; you decide. Tap a card to see how each plan would play out for your specific profile.</p>
+    </div>
+
+    <div class="cards" id="cardsWrap"></div>
+
+    <div class="reasoning">
+      <h4>How the model arrived at these matches</h4>
+      <div class="reasoning-body" id="reasoning"></div>
+    </div>
+
+    <div class="reset-row">
+      <button class="reset-btn" onclick="reset()">← Start over</button>
+    </div>
+  </div>
+
+  <footer>
+    <div>INSURANCE MATCHER AI · ACADEMIC PROTOTYPE</div>
+    <div>BUILT WITH CLAUDE · 2026</div>
+  </footer>
+</div>
+
+<script>
+  // ---------- the "AI" ----------
+  // This is a heuristic recommendation engine that mimics what a fine-tuned LLM
+  // would produce: ranking policies across cost, coverage, and fit-to-profile.
+  // In a real build, the same I/O contract would call an LLM + structured RAG
+  // over scraped policy PDFs.
+
+  const POLICY_POOL = [
+    { id:'BC-PPO-Gold',     insurer:'BlueCross PPO Gold',          tier:'Gold',    type:'PPO',  premium:489, deductible:1200, oop:4500, network:'Broad',     rxTier:'Comprehensive', mental:'Strong',  specialty:'In-network' },
+    { id:'BC-PPO-Silver',   insurer:'BlueCross PPO Silver',        tier:'Silver',  type:'PPO',  premium:362, deductible:3000, oop:7500, network:'Broad',     rxTier:'Standard',      mental:'Standard',specialty:'In-network' },
+    { id:'KP-HMO-Gold',     insurer:'Kaiser Permanente HMO Gold',  tier:'Gold',    type:'HMO',  premium:412, deductible:1500, oop:5000, network:'Integrated',rxTier:'Comprehensive', mental:'Strong',  specialty:'Referral' },
+    { id:'KP-HMO-Silver',   insurer:'Kaiser HMO Silver',           tier:'Silver',  type:'HMO',  premium:298, deductible:3500, oop:8100, network:'Integrated',rxTier:'Standard',      mental:'Standard',specialty:'Referral' },
+    { id:'UH-EPO-Silver',   insurer:'UnitedHealth EPO Silver',     tier:'Silver',  type:'EPO',  premium:341, deductible:3200, oop:7800, network:'Regional',  rxTier:'Standard',      mental:'Standard',specialty:'Limited' },
+    { id:'AET-Bronze',      insurer:'Aetna Bronze HDHP',           tier:'Bronze',  type:'HDHP', premium:218, deductible:6800, oop:9100, network:'Narrow',    rxTier:'Generic-only',  mental:'Basic',   specialty:'Limited' },
+    { id:'CIG-Bronze',      insurer:'Cigna Connect Bronze',        tier:'Bronze',  type:'HMO',  premium:241, deductible:6200, oop:9000, network:'Narrow',    rxTier:'Generic+',      mental:'Basic',   specialty:'Referral' },
+    { id:'AMB-Cat',         insurer:'Ambetter Catastrophic',       tier:'Catastrophic',type:'EPO',premium:172, deductible:8700, oop:9450, network:'Narrow', rxTier:'Generic-only',  mental:'Minimal', specialty:'Limited' },
+    { id:'MOL-Silver',      insurer:'Molina Marketplace Silver',   tier:'Silver',  type:'HMO',  premium:312, deductible:3800, oop:8200, network:'Regional',  rxTier:'Standard',      mental:'Standard',specialty:'Referral' },
+    { id:'OSCAR-Gold',      insurer:'Oscar Gold Classic',          tier:'Gold',    type:'EPO',  premium:445, deductible:1800, oop:5200, network:'Regional',  rxTier:'Comprehensive', mental:'Strong',  specialty:'In-network' },
+  ];
+
+  function estimateAnnualCost(plan, profile){
+    const visitMap = {low:1, med:4, high:9, vhigh:14};
+    const visits = visitMap[profile.visits];
+    const medsMap = {none:0, generic:240, brand:1900, multi:3400};
+    const baseCare = visits * 180;
+    const rxCost = medsMap[profile.meds] * (plan.rxTier==='Comprehensive'?0.35:plan.rxTier==='Standard'?0.6:plan.rxTier==='Generic+'?0.7:0.9);
+    const expectedMedical = baseCare + rxCost;
+    // out of pocket capped by deductible-then-coinsurance approximation
+    const oop = Math.min(plan.oop, expectedMedical * (plan.tier==='Gold'?0.35:plan.tier==='Silver'?0.55:plan.tier==='Bronze'?0.75:0.9) + Math.min(plan.deductible*0.4, expectedMedical*0.5));
+    const annualPremium = plan.premium * 12;
+    return Math.round(annualPremium + oop);
+  }
+
+  function scorePlan(plan, profile){
+    let score = 50;
+    const txt = (profile.conditions||'').toLowerCase();
+
+    // priority weighting
+    if(profile.priority==='cost') score -= plan.premium*0.06;
+    if(profile.priority==='coverage'){
+      if(plan.tier==='Gold') score += 18;
+      if(plan.tier==='Silver') score += 6;
+      if(plan.tier==='Bronze') score -= 10;
+      if(plan.tier==='Catastrophic') score -= 20;
+    }
+    if(profile.priority==='network' && plan.network==='Broad') score += 14;
+    if(profile.priority==='catastrophic' && plan.tier==='Catastrophic') score += 25;
+
+    // risk tolerance
+    if(profile.risk==='low' && plan.oop < 6000) score += 12;
+    if(profile.risk==='low' && plan.tier==='Catastrophic') score -= 25;
+    if(profile.risk==='high' && plan.premium < 250) score += 10;
+
+    // visits
+    if(profile.visits==='high' || profile.visits==='vhigh'){
+      if(plan.tier==='Gold') score += 15;
+      if(plan.tier==='Bronze'||plan.tier==='Catastrophic') score -= 18;
+    }
+
+    // meds
+    if((profile.meds==='brand'||profile.meds==='multi') && plan.rxTier==='Comprehensive') score += 14;
+    if((profile.meds==='brand'||profile.meds==='multi') && plan.rxTier==='Generic-only') score -= 20;
+
+    // condition cues
+    if(/asthma|copd|breath/.test(txt) && plan.rxTier !== 'Generic-only') score += 6;
+    if(/depress|anxiety|therap|mental|adhd/.test(txt)){
+      if(plan.mental==='Strong') score += 12;
+      if(plan.mental==='Basic'||plan.mental==='Minimal') score -= 10;
+    }
+    if(/diabet|insulin/.test(txt) && plan.rxTier==='Comprehensive') score += 10;
+    if(/cancer|chemo|oncolog/.test(txt) && plan.tier==='Gold') score += 14;
+    if(/pregnan|family|baby|child/.test(txt) && plan.tier==='Gold') score += 10;
+    if(/heart|cardiac/.test(txt) && plan.specialty==='In-network') score += 8;
+
+    // income-based subsidy proxy
+    if(profile.income < 45000 && plan.premium < 320) score += 6;
+    if(profile.income > 90000 && plan.tier==='Gold') score += 4;
+
+    // age
+    if(profile.age > 50 && plan.tier==='Gold') score += 6;
+    if(profile.age < 30 && plan.tier==='Bronze') score += 4;
+
+    return Math.max(1, Math.min(99, Math.round(score)));
+  }
+
+  function pickThree(profile){
+    const scored = POLICY_POOL.map(p => {
+      const cost = estimateAnnualCost(p, profile);
+      const fit = scorePlan(p, profile);
+      return {...p, cost, fit};
+    });
+
+    // SAFE: highest coverage (Gold), best fit among Gold plans
+    const safePool = scored.filter(p => p.tier==='Gold');
+    const safe = safePool.sort((a,b)=>b.fit-a.fit)[0] || scored.sort((a,b)=>a.cost-b.cost).reverse()[0];
+
+    // BUDGET: lowest cost, but not catastrophic unless user explicitly wants it
+    const budgetPool = scored.filter(p =>
+      profile.priority==='catastrophic' ? true : (p.tier==='Bronze' || p.tier==='Silver')
+    );
+    const budget = budgetPool.sort((a,b)=>a.cost-b.cost)[0] || scored.sort((a,b)=>a.cost-b.cost)[0];
+
+    // BALANCED: best overall fit score, not the same plan as Safe or Budget
+    const balancedPool = scored.filter(p => p.id !== safe.id && p.id !== budget.id);
+    const balanced = balancedPool.sort((a,b)=>b.fit-a.fit)[0];
+
+    return {safe, balanced, budget};
+  }
+
+  function generateHighlights(plan, profile, role){
+    const out = [];
+    const txt = (profile.conditions||'').toLowerCase();
+
+    if(role==='safe'){
+      out.push(`$${plan.oop.toLocaleString()} out-of-pocket cap — your worst-case year is bounded.`);
+      if(plan.mental==='Strong') out.push('Robust mental health benefits including in-network therapy.');
+      if(plan.rxTier==='Comprehensive') out.push('Comprehensive Rx formulary covers brand-name and specialty meds.');
+      out.push(`${plan.network} provider network — likely keeps your current doctors.`);
+    }
+    if(role==='balanced'){
+      out.push(`Best fit score (${plan.fit}/99) for your specific profile.`);
+      out.push(`$${plan.deductible.toLocaleString()} deductible balances monthly cost with risk exposure.`);
+      if(/asthma|anxiety|therap/.test(txt)) out.push('Covers the specific conditions you mentioned at reasonable copays.');
+      out.push(`${plan.type} structure: ${plan.type==='PPO'?'flexible referrals':plan.type==='HMO'?'low copays via PCP':'good network at lower premium'}.`);
+    }
+    if(role==='budget'){
+      out.push(`Lowest monthly premium at $${plan.premium}/mo.`);
+      out.push('Protects against catastrophic medical events even with high deductible.');
+      if(plan.rxTier==='Generic-only'||plan.rxTier==='Generic+') out.push('⚠ Limited brand-name Rx coverage — confirm your meds are covered.');
+      if(plan.tier==='Catastrophic') out.push('⚠ Catastrophic-only — routine visits paid mostly out of pocket.');
+      out.push(`Best if you rarely see a doctor and want a safety net.`);
+    }
+    return out.slice(0,4);
+  }
+
+  function buildReasoning(profile, picks){
+    const txt = (profile.conditions||'').toLowerCase();
+    const flags = [];
+    if(/asthma/.test(txt)) flags.push('asthma');
+    if(/therap|anxiety|depress|mental/.test(txt)) flags.push('mental health utilization');
+    if(/diabet/.test(txt)) flags.push('diabetes management');
+    if(/pregnan|family/.test(txt)) flags.push('family planning');
+    if(/cancer|heart|chronic/.test(txt)) flags.push('chronic / specialty care');
+
+    const flagText = flags.length
+      ? `The model flagged <strong>${flags.join(', ')}</strong> as cost drivers and weighted formulary depth and mental-health coverage accordingly.`
+      : 'No high-risk conditions flagged — the model treated you as an average-utilization user.';
+
+    const visitText = {
+      low:'minimal annual utilization (~1–2 visits)',
+      med:'moderate utilization (~4 visits/year)',
+      high:'high utilization (~9 visits/year)',
+      vhigh:'very high utilization (~14+ visits/year)'
+    }[profile.visits];
+
+    return `
+      <p>Your intake was vectorized into <strong>23 features</strong> across demographics, utilization, financial exposure, and free-text condition flags. We scored every available plan in ${profile.state} against your profile and surfaced the three below.</p>
+      <p>${flagText} Your reported utilization (<strong>${visitText}</strong>) is the dominant driver — at this rate, premium-savings on a Bronze plan get eaten by out-of-pocket costs unless you stay healthy.</p>
+      <p><strong>Safe pick</strong> minimizes worst-case exposure. <strong>Balanced pick</strong> scored highest on overall fit (cost × coverage × condition match). <strong>Budget pick</strong> optimizes monthly premium while still protecting against a catastrophic year.</p>
+      <p style="margin-top:16px;padding-top:16px;border-top:1px dashed var(--mute);font-size:13px;color:var(--mute)"><strong style="color:var(--ink-soft)">Why a human still chooses:</strong> the model can rank against your data, but it can't weigh that your sister works at one of these insurers, or that you hated your last HMO referral process. You see the top three — you pick.</p>
+    `;
+  }
+
+  // ---------- UI ----------
+  async function runMatch(){
+    const btn = document.getElementById('goBtn');
+    btn.disabled = true;
+    document.getElementById('formCard').style.display='none';
+    const loading = document.getElementById('loading');
+    loading.classList.add('active');
+
+    const stages = [
+      {id:'s1', label:'Parsing intake & medical signals…'},
+      {id:'s2', label:'Embedding profile, querying policy index…'},
+      {id:'s3', label:'Predicting annual cost across all plans…'},
+      {id:'s4', label:'Ranking matches — Safe / Balanced / Budget…'},
+      {id:'s5', label:'Composing rationale and tradeoffs…'},
+    ];
+    const status = document.getElementById('loadStatus');
+
+    for(let i=0;i<stages.length;i++){
+      document.querySelectorAll('.stage').forEach((el,idx)=>{
+        if(idx < i) el.classList.add('done'), el.classList.remove('active');
+        else if(idx === i) el.classList.add('active');
+        else el.classList.remove('active','done');
+      });
+      status.textContent = stages[i].label;
+      await new Promise(r=>setTimeout(r, 550));
+    }
+    document.querySelectorAll('.stage').forEach(el=>{el.classList.remove('active');el.classList.add('done')});
+
+    await new Promise(r=>setTimeout(r, 250));
+    loading.classList.remove('active');
+    renderResults();
+    btn.disabled = false;
+  }
+
+  function getProfile(){
+    return {
+      age: +document.getElementById('age').value,
+      state: document.getElementById('state').value,
+      income: +document.getElementById('income').value,
+      employment: document.getElementById('employment').value,
+      visits: document.getElementById('visits').value,
+      meds: document.getElementById('meds').value,
+      conditions: document.getElementById('conditions').value,
+      priority: document.getElementById('priority').value,
+      risk: document.getElementById('risk').value,
+    };
+  }
+
+  function renderResults(){
+    const profile = getProfile();
+    const {safe, balanced, budget} = pickThree(profile);
+
+    const order = [
+      {plan:safe,     role:'safe',     tag:'SAFE',     label:'Higher cost, fullest coverage', subtitle:'Maximum protection'},
+      {plan:balanced, role:'balanced', tag:'BALANCED', label:'Best overall match',            subtitle:'Model\'s top recommendation'},
+      {plan:budget,   role:'budget',   tag:'BUDGET',   label:'Lower cost, leaner coverage',   subtitle:'Premium savings'},
+    ];
+
+    const wrap = document.getElementById('cardsWrap');
+    wrap.innerHTML = order.map(({plan, role, tag, label, subtitle}) => {
+      const highlights = generateHighlights(plan, profile, role);
+      return `
+        <div class="card ${role}">
+          <div class="card-tag">${tag}</div>
+          <div class="match-score">FIT SCORE · <b>${plan.fit}/99</b> · ${subtitle}</div>
+          <h3>${plan.insurer}</h3>
+          <div class="insurer">${label} — ${plan.tier} · ${plan.type}</div>
+
+          <div class="price-block">
+            <div class="price">$${plan.premium}</div>
+            <div class="price-unit">/month premium</div>
+          </div>
+          <div class="annual-est">Est. total annual cost for you: <b>$${plan.cost.toLocaleString()}</b></div>
+
+          <div class="specs">
+            <div class="spec"><span class="spec-label">Deductible</span><span class="spec-val">$${plan.deductible.toLocaleString()}</span></div>
+            <div class="spec"><span class="spec-label">OOP Max</span><span class="spec-val">$${plan.oop.toLocaleString()}</span></div>
+            <div class="spec"><span class="spec-label">Network</span><span class="spec-val">${plan.network}</span></div>
+            <div class="spec"><span class="spec-label">Rx Tier</span><span class="spec-val">${plan.rxTier}</span></div>
+          </div>
+
+          <div class="highlights">
+            <div class="highlights-title">Why this fits</div>
+            <ul>${highlights.map(h=>`<li>${h}</li>`).join('')}</ul>
+          </div>
+
+          <div class="card-cta">
+            <button onclick="alert('In production: opens full plan PDF with AI-highlighted sections relevant to your profile.')">View full policy →</button>
+            <span class="factory-trace">plan_id: ${plan.id}</span>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    document.getElementById('reasoning').innerHTML = buildReasoning(profile, {safe, balanced, budget});
+
+    const now = new Date();
+    document.getElementById('resultStamp').textContent =
+      now.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) +
+      ' · ' + profile.state.toUpperCase();
+
+    document.getElementById('results').classList.add('active');
+    document.getElementById('results').scrollIntoView({behavior:'smooth', block:'start'});
+  }
+
+  function reset(){
+    document.getElementById('results').classList.remove('active');
+    document.getElementById('formCard').style.display='block';
+    document.querySelectorAll('.stage').forEach(el=>el.classList.remove('active','done'));
+    window.scrollTo({top:0, behavior:'smooth'});
+  }
+</script>
+
+</body>
+</html>
